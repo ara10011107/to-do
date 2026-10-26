@@ -165,6 +165,27 @@ button:focus-visible {
   background: var(--accent);
 }
 
+/* 별표 버튼: 평소엔 빈 별, 누르면 노란 별 */
+#todo-list li .star-button {
+  min-width: 40px;
+  padding: 0 6px;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--text-soft);
+  background: transparent;
+  border: none;
+}
+
+#todo-list li .star-button:hover {
+  color: var(--accent-dark);
+  background: transparent;
+}
+
+#todo-list li .star-button[aria-pressed="true"] {
+  color: var(--accent);
+  text-shadow: 0 0 1px var(--accent-dark);
+}
+
 /* 목록이 비어 있을 때 보이는 글 */
 #empty-message {
   margin: 4px 0;

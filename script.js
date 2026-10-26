@@ -8,7 +8,7 @@ const remainingCount = document.getElementById("remaining-count");
 // 브라우저에 저장할 때 쓰는 이름
 const STORAGE_KEY = "todos";
 
-// 할 일 목록: { text: "할 일 내용", done: 끝냈는지 } 가 여러 개
+// 할 일 목록: { text: "할 일 내용", done: 끝냈는지, starred: 중요한지 } 가 여러 개
 let todos = loadTodos();
 
 // 저장해 둔 목록을 불러온다. 없거나 읽을 수 없으면 빈 목록.
@@ -34,7 +34,23 @@ function saveTodos() {
 function render() {
   list.innerHTML = "";
 
-  todos.forEach(function (todo, index) {
+  // 별표 친 할 일을 맨 위로. 저장된 순서는 그대로 두고 보여 주는 순서만 바꾼다.
+  const entries = todos.map(function (todo, index) {
+    return { todo: todo, index: index };
+  });
+  const starredFirst = entries
+    .filter(function (entry) {
+      return entry.todo.starred;
+    })
+    .concat(
+      entries.filter(function (entry) {
+        return !entry.todo.starred;
+      })
+    );
+
+  starredFirst.forEach(function (entry) {
+    const todo = entry.todo;
+    const index = entry.index;
     const item = document.createElement("li");
 
     // 끝냈는지 표시하는 체크 칸
@@ -52,6 +68,19 @@ function render() {
     const text = document.createElement("span");
     text.textContent = todo.text;
 
+    // 별표 버튼: 누르면 중요한 일이 된다
+    const starButton = document.createElement("button");
+    starButton.type = "button";
+    starButton.className = "star-button";
+    starButton.textContent = todo.starred ? "★" : "☆";
+    starButton.setAttribute("aria-label", todo.text + " 중요 표시");
+    starButton.setAttribute("aria-pressed", todo.starred ? "true" : "false");
+    starButton.addEventListener("click", function () {
+      todos[index].starred = !todos[index].starred;
+      saveTodos();
+      render();
+    });
+
     // 삭제 버튼
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
@@ -62,7 +91,7 @@ function render() {
       render();
     });
 
-    item.append(checkbox, text, deleteButton);
+    item.append(checkbox, text, starButton, deleteButton);
     list.append(item);
   });
 

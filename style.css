@@ -70,6 +70,15 @@ h1 {
   text-align: center;
 }
 
+/* 제목 자리의 로고 그림: 카드 폭에 맞춰 줄어든다 */
+h1 img {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
+}
+
 label {
   font-size: 15px;
   font-weight: 600;

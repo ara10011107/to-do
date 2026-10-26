@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘 할 일</title>
+</head>
+<body>
+  <h1>오늘 할 일</h1>
+
+  <!-- 할 일을 적는 입력칸과 추가 버튼 -->
+  <label for="todo-input">할 일</label>
+  <input type="text" id="todo-input" placeholder="할 일을 적어 주세요">
+  <button type="button" id="add-button">추가</button>
+
+  <!-- 할 일 목록: 한 줄에 할 일 하나씩 (체크 칸, 할 일 내용, 삭제 버튼) -->
+  <ul id="todo-list"></ul>
+
+  <!-- 목록이 비어 있을 때 보이는 글 -->
+  <p id="empty-message">아직 할 일이 없어요</p>
+
+  <!-- 남은 할 일 개수 -->
+  <p id="remaining-count">남은 할 일 0개</p>
+</body>
+</html>

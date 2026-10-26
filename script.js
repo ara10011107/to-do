@@ -10,28 +10,42 @@ const SUPABASE_URL = "https://idhavujyfrrhticwwxhu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_un-9IJ6f8_YqQHDde2wNug_CRNS7dBm";
 const TODOS_URL = SUPABASE_URL + "/rest/v1/todos";
 
+// 할 일에 붙이는 파일은 스토리지의 files 버킷에 올린다
+const STORAGE_URL = SUPABASE_URL + "/storage/v1/object";
+const BUCKET = "files";
+
 // todos 표에는 별표 칸이 없어서, 별표는 이 브라우저에 따로 저장한다
 const STAR_STORAGE_KEY = "starred-ids";
 
 // 목록이 비어 있을 때 보이는 원래 글
 const EMPTY_TEXT = emptyMessage.textContent;
 
-// 할 일 목록: 표에서 불러온 { id, text, done, created_at } 가 여러 개
+// 할 일 목록: 표에서 불러온 { id, text, done, created_at, file_path, file_name } 가 여러 개
 let todos = [];
 
 // 별표 친 할 일의 id 목록
 let starredIds = loadStarredIds();
 
 // Supabase에 요청을 보낸다. 실패하면 오류를 낸다.
+// options.body는 표에 보낼 내용, options.file은 스토리지에 올릴 파일이다.
 async function request(url, options) {
+  const headers = {
+    apikey: SUPABASE_KEY,
+    Authorization: "Bearer " + SUPABASE_KEY,
+    Prefer: "return=minimal",
+  };
+  let body;
+  if (options.file) {
+    headers["Content-Type"] = options.file.type || "application/octet-stream";
+    body = options.file;
+  } else if (options.body) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(options.body);
+  }
   const response = await fetch(url, {
     method: options.method || "GET",
-    headers: {
-      apikey: SUPABASE_KEY,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    headers: headers,
+    body: body,
   });
   if (!response.ok) {
     throw new Error("Supabase 요청 실패: " + response.status + " " + (await response.text()));
@@ -48,6 +62,41 @@ async function loadTodos() {
 // 할 일 id를 주소에 넣을 수 있는 모양으로 바꾼다
 function byId(id) {
   return TODOS_URL + "?id=eq." + encodeURIComponent(id);
+}
+
+// 스토리지 안의 파일 위치를 주소에 넣을 수 있는 모양으로 바꾼다
+function storagePath(path) {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
+
+// 누구나 열 수 있는 파일 주소 (files 버킷이 공개 버킷이어야 열린다)
+function fileUrl(path) {
+  return STORAGE_URL + "/public/" + BUCKET + "/" + storagePath(path);
+}
+
+// 파일을 스토리지에 올리고, 할 일 줄에 파일 위치와 이름을 적는다.
+// 이미 붙은 파일이 있었으면 올린 뒤에 지운다.
+async function attachFile(todo, file) {
+  // 스토리지 파일 이름에는 한글을 쓸 수 없어서, 원래 이름은 file_name 칸에 따로 적는다
+  const dot = file.name.lastIndexOf(".");
+  const extension = dot > 0 ? file.name.slice(dot + 1) : "";
+  const path =
+    "todos/" + todo.id + "/" + Date.now() + (/^[a-z0-9]{1,10}$/i.test(extension) ? "." + extension : "");
+
+  await request(STORAGE_URL + "/" + BUCKET + "/" + storagePath(path), { method: "POST", file: file });
+  await request(byId(todo.id), { method: "PATCH", body: { file_path: path, file_name: file.name } });
+  if (todo.file_path) {
+    await removeFile(todo.file_path);
+  }
+}
+
+// 스토리지에서 파일을 지운다. 실패해도 할 일은 그대로 두고 기록만 남긴다.
+async function removeFile(path) {
+  try {
+    await request(STORAGE_URL + "/" + BUCKET + "/" + storagePath(path), { method: "DELETE" });
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 // 저장해 둔 별표 목록을 불러온다. 없거나 읽을 수 없으면 빈 목록.
@@ -113,9 +162,44 @@ function render() {
       });
     });
 
-    // 할 일 내용
+    // 할 일 내용. 파일을 붙였으면 그 아래에 파일 이름 링크
+    const body = document.createElement("div");
+    body.className = "todo-body";
     const text = document.createElement("span");
     text.textContent = todo.text;
+    body.append(text);
+    if (todo.file_path) {
+      const link = document.createElement("a");
+      link.className = "file-link";
+      link.href = fileUrl(todo.file_path);
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = todo.file_name || "붙인 파일";
+      body.append(link);
+    }
+
+    // 파일 버튼: 누르면 파일을 고르는 창이 열린다
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.hidden = true;
+    const fileButton = document.createElement("button");
+    fileButton.type = "button";
+    fileButton.textContent = "파일";
+    fileButton.setAttribute("aria-label", todo.text + " 파일 붙이기");
+    fileButton.addEventListener("click", function () {
+      fileInput.click();
+    });
+    fileInput.addEventListener("change", function () {
+      const file = fileInput.files[0];
+      if (!file) {
+        return;
+      }
+      fileButton.disabled = true;
+      fileButton.textContent = "올리는 중";
+      change(function () {
+        return attachFile(todo, file);
+      });
+    });
 
     // 별표 버튼: 누르면 중요한 일이 된다
     const starButton = document.createElement("button");
@@ -142,6 +226,9 @@ function render() {
     deleteButton.addEventListener("click", function () {
       change(async function () {
         await request(byId(todo.id), { method: "DELETE" });
+        if (todo.file_path) {
+          await removeFile(todo.file_path);
+        }
         starredIds = starredIds.filter(function (starredId) {
           return starredId !== String(todo.id);
         });
@@ -149,7 +236,7 @@ function render() {
       });
     });
 
-    item.append(checkbox, text, starButton, deleteButton);
+    item.append(checkbox, body, fileInput, fileButton, starButton, deleteButton);
     list.append(item);
   });
 

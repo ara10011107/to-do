@@ -139,7 +139,7 @@ button:focus-visible {
 #todo-list li {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 8px;
   padding: 8px 8px 8px 14px;
   background: var(--glass-strong);
@@ -155,18 +155,34 @@ button:focus-visible {
   accent-color: var(--accent);
 }
 
-#todo-list li span {
+#todo-list li .todo-body {
   flex: 1;
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* 할 일 아래의 파일 이름 링크 */
+#todo-list li .file-link {
+  display: block;
+  font-size: 14px;
+  color: var(--text-soft);
+  text-decoration: underline;
 }
 
 #todo-list li button {
   flex: none;
   min-height: 40px;
-  padding: 6px 12px;
+  padding: 6px 10px;
   font-size: 15px;
   color: var(--text);
   background: transparent;
   border: 1px solid var(--accent);
+}
+
+#todo-list li button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 #todo-list li button:hover {

@@ -1,9 +1,10 @@
 /* 화면 전체에 쓰는 색 */
 :root {
-  --text: #1e2340;
-  --text-soft: #4a5070;
-  --accent: #5b5bd6;
-  --accent-dark: #4343b8;
+  --text: #3a2a00;
+  --text-soft: #6b5310;
+  --accent: #f5b800;
+  --accent-dark: #d99a00;
+  --on-accent: #3a2a00;
   --glass: rgba(255, 255, 255, 0.55);
   --glass-strong: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(255, 255, 255, 0.8);
@@ -17,10 +18,10 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(circle at 15% 20%, #ff9ecb 0, transparent 45%),
-    radial-gradient(circle at 85% 30%, #8fd3ff 0, transparent 45%),
-    radial-gradient(circle at 50% 90%, #b9a6ff 0, transparent 50%),
-    #e9e6ff;
+    radial-gradient(circle at 15% 20%, #ffd86b 0, transparent 45%),
+    radial-gradient(circle at 85% 30%, #ffb347 0, transparent 45%),
+    radial-gradient(circle at 50% 90%, #fff07a 0, transparent 50%),
+    #fff6d6;
   background-attachment: fixed;
 }
 
@@ -36,7 +37,7 @@ body {
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(40, 40, 90, 0.18);
+  box-shadow: 0 8px 32px rgba(120, 80, 0, 0.18);
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 
@@ -102,7 +103,7 @@ button {
   padding: 10px 18px;
   font: inherit;
   font-weight: 600;
-  color: #fff;
+  color: var(--on-accent);
   background: var(--accent);
   border: none;
   border-radius: 14px;
@@ -154,13 +155,13 @@ button:focus-visible {
   min-height: 40px;
   padding: 6px 12px;
   font-size: 15px;
-  color: var(--accent-dark);
+  color: var(--text);
   background: transparent;
   border: 1px solid var(--accent);
 }
 
 #todo-list li button:hover {
-  color: #fff;
+  color: var(--on-accent);
   background: var(--accent);
 }
 
